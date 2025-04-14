@@ -2,6 +2,8 @@
 
 A command-line interface for interacting with [deep-ml.com](https://deep-ml.com), allowing you to browse problems, submit solutions, and track your progress directly from your terminal.
 
+*WARNING:* Currently, test cases are run locally. Arbitrary malicious code from the default test cases could theoretically be run on your system. Use at your own risk.
+
 ## Installation
 
 ```bash
