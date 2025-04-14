@@ -20,16 +20,6 @@ go build -o deep-ml ./cmd/deep-ml-cli
 
 ## Configuration
 
-Before using the CLI, you need to set your Firebase API key in the source code. Open `pkg/api/client.go` and replace the `apiKey` constant with your actual Firebase API key:
-
-```go
-const (
-    // ...
-    apiKey = "YOUR_FIREBASE_API_KEY" // Replace with your Firebase API key
-    // ...
-)
-```
-
 The CLI uses a YAML configuration file located at `~/.deep-ml/deep-ml.yaml`. Here are the available configuration options:
 
 ```yaml
