@@ -51,8 +51,28 @@ var loginCmd = &cobra.Command{
 		viper.Set("token", authResp.Token)
 		viper.Set("refresh_token", authResp.RefreshToken)
 		viper.Set("token_expires", authResp.ExpiresIn)
+		
+		// Save user ID (either from authResp.LocalID or user profile)
+		userID := authResp.LocalID
+		if userID == "" && authResp.User.UserID != "" {
+			userID = authResp.User.UserID
+		}
+		
+		// If we have a user ID, save it
+		if userID != "" {
+			viper.Set("user_id", userID)
+			fmt.Println("User ID saved automatically.")
+		} else {
+			// Still allow manual override if desired
+			userIDOverride, err := cmd.Flags().GetString("user-id")
+			if err == nil && userIDOverride != "" {
+				viper.Set("user_id", userIDOverride)
+				fmt.Println("User ID set from flag.")
+			}
+		}
+		
 		if err := viper.WriteConfig(); err != nil {
-			fmt.Println("Failed to save auth tokens:", err)
+			fmt.Println("Failed to save configuration:", err)
 			return
 		}
 
@@ -62,4 +82,5 @@ var loginCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(loginCmd)
+	loginCmd.Flags().String("user-id", "", "Override the automatically detected user ID")
 }

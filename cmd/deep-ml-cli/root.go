@@ -35,7 +35,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.deep-ml.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.deep-ml/deep-ml.yaml)")
 
 	// Initialize API client
 	client = api.NewClient()
@@ -54,11 +54,6 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".deep-ml" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigType("yaml")
-		viper.SetConfigName(".deep-ml")
-		
 		// Create the config directory if it doesn't exist
 		cfgDir := filepath.Join(home, ".deep-ml")
 		if _, err := os.Stat(cfgDir); os.IsNotExist(err) {
@@ -66,9 +61,27 @@ func initConfig() {
 				fmt.Println("Error creating config directory:", err)
 			}
 		}
+		
+		// Set config path to ~/.deep-ml/deep-ml.yaml
+		viper.AddConfigPath(cfgDir)
+		viper.SetConfigType("yaml")
+		viper.SetConfigName("deep-ml")
+		
+		// Create the problems directory if it doesn't exist
+		problemsDir := filepath.Join(cfgDir, "problems")
+		if _, err := os.Stat(problemsDir); os.IsNotExist(err) {
+			if err := os.MkdirAll(problemsDir, 0755); err != nil {
+				fmt.Println("Error creating problems directory:", err)
+			}
+		}
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
+
+	// Set default values
+	home, _ := os.UserHomeDir()
+	viper.SetDefault("problems_dir", filepath.Join(home, ".deep-ml", "problems"))
+	viper.SetDefault("include_problem_details", true)
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
@@ -79,6 +92,11 @@ func initConfig() {
 		
 		if token != "" && refreshToken != "" {
 			client.SetToken(token, refreshToken, expiresIn)
+		}
+	} else if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		// Config file not found, create it with default values
+		if err := viper.WriteConfig(); err != nil {
+			fmt.Println("Error creating config file:", err)
 		}
 	}
 }
